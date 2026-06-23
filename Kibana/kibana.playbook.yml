@@ -3,7 +3,7 @@
   connection: local
   become: true
   vars:
-    - kibana_ver: '6.3'
+    - kibana_ver: '6.x'
 
   tasks:
     - name: Installation apt-transport-https
@@ -22,9 +22,8 @@
         state: "present"
 
     - name: Ajout du Repo Kibana
-      #apt_repository:
-        #repo: "deb http://packages.elastic.co/kibana/{{ kibana_ver }}/debian stable main"
-      command: "echo 'deb https://artifacts.elastic.co/packages/{{ kibana_ver }}/apt stable main' | sudo tee -a /etc/apt/sources.list.d/elastic-6.x.list"
+      apt_repository:
+        repo: "deb https://artifacts.elastic.co/packages/{{ kibana_ver }}/apt stable main"
 
     - name: Installation Kibana
       apt:
@@ -36,16 +35,9 @@
 
     - name: Vérification des droits du dossier Kibana
       file:
-        path: "/opt/kibana"
+        path: "/usr/share/kibana"
         owner: "kibana"
         group: "kibana"
-
-    - name: Definition de l'adresse elasticsearch.url
-      replace:
-        path: "/opt/kibana/config/kibana.yml"
-        regexp: "^# elasticsearch.url: \"http://localhost:9200\""
-        replace: "elasticsearch.url: \"http://elasticsearch:9200\""
-
 
     #- name: Recharger le daemon
     #  command: "sudo systemctl daemon-reload"

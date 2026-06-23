@@ -35,7 +35,7 @@ RUN ln -s usr/local/bin/docker-entrypoint.sh /entrypoint.sh
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 
-COPY config /usr/share/elasticsearch/config
+COPY config /etc/elasticsearch
 
 
 # Setup volume

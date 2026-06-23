@@ -3,7 +3,7 @@
   connection: local
   become: true
   vars:
-    - elastic_ver: '6.3'
+    - elastic_ver: '6.x'
 
   tasks:
     - name: Installation apt-transport-https
@@ -27,9 +27,8 @@
         state: "present"
 
     - name: Ajout du Repo Elasticsearch
-      #apt_repository:
-      # repo: "deb https://packages.elastic.co/elasticsearch/{{ elastic_ver }}/debian stable main"
-      command: "echo 'deb https://artifacts.elastic.co/packages/{{ elastic_ver }}/apt stable main' | sudo tee -a /etc/apt/sources.list.d/elastic-6.x.list"
+      apt_repository:
+        repo: "deb https://artifacts.elastic.co/packages/{{ elastic_ver }}/apt stable main"
 
     - name: Installation Elasticsearch
       apt:

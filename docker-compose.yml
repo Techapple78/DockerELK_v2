@@ -1,15 +1,11 @@
-version: '2'
-
 services:
-  Elastic:
+  elasticsearch:
     image: dockerelk_elastic
     build:
       context: Elastic/
     volumes:
       - "./.data:/usr/share/elasticsearch/data"
-      - ./Elastic/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
-      - ./Elastic/config/jvm.options:/usr/share/elasticsearch/config/jvm.options:ro
-      - ./Elastic/config/log4j2.properties:/usr/share/elasticsearch/config/log4j2.properties:ro
+      - ./Elastic/config/elasticsearch.yml:/etc/elasticsearch/elasticsearch.yml:ro
     ports:
       - "9200:9200"
       - "9300:9300"
@@ -18,12 +14,12 @@ services:
     networks:
       - elk
 
-  Logstash:
+  logstash:
     image: dockerelk_logstash
     build:
       context: Logstash/
     depends_on:
-      - Elastic
+      - elasticsearch
     volumes:
       - ./Logstash/config/:/usr/share/logstash/config/:ro
       - ./Logstash/pipeline:/usr/share/logstash/pipeline:ro
@@ -36,16 +32,14 @@ services:
     networks:
       - elk
 
-  Kibana:
+  kibana:
     image: dockerelk_kibana
     build:
       context: Kibana/
     volumes:
       - ./Kibana/config/:/usr/share/kibana/config:ro
     depends_on:
-      - Elastic
-    links:
-      - Elastic
+      - elasticsearch
     ports:
       - "5601:5601"
     networks:

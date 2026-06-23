@@ -20,7 +20,7 @@ RUN apt-get -y clean && \
     apt-get -y autoremove && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-ENV PATH /opt/kibana/bin:$PATH
+ENV PATH /usr/share/kibana/bin:$PATH
 
 # Setup entrypoint Ansible Playbook
 COPY docker-entrypoint.yml /docker-entrypoint.yml
