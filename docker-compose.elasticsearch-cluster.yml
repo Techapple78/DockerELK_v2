@@ -1,0 +1,101 @@
+name: dockerelk-es-cluster
+
+services:
+  es01:
+    image: dockerelk_elastic
+    build:
+      context: Elastic/
+    command: ["elasticsearch", "-Enode.name=es01"]
+    volumes:
+      - "./.data-es-cluster/es01:/usr/share/elasticsearch/data"
+      - ./Elastic/config/elasticsearch-cluster.yml:/etc/elasticsearch/elasticsearch.yml:ro
+    ports:
+      - "39200:9200"
+      - "39300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx512m -Xms512m"
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    networks:
+      elk-es-cluster:
+        aliases:
+          - elasticsearch
+
+  es02:
+    image: dockerelk_elastic
+    build:
+      context: Elastic/
+    command: ["elasticsearch", "-Enode.name=es02"]
+    volumes:
+      - "./.data-es-cluster/es02:/usr/share/elasticsearch/data"
+      - ./Elastic/config/elasticsearch-cluster.yml:/etc/elasticsearch/elasticsearch.yml:ro
+    ports:
+      - "39201:9200"
+      - "39301:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx512m -Xms512m"
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    networks:
+      - elk-es-cluster
+
+  es03:
+    image: dockerelk_elastic
+    build:
+      context: Elastic/
+    command: ["elasticsearch", "-Enode.name=es03"]
+    volumes:
+      - "./.data-es-cluster/es03:/usr/share/elasticsearch/data"
+      - ./Elastic/config/elasticsearch-cluster.yml:/etc/elasticsearch/elasticsearch.yml:ro
+    ports:
+      - "39202:9200"
+      - "39302:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx512m -Xms512m"
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    networks:
+      - elk-es-cluster
+
+  logstash:
+    image: dockerelk_logstash
+    build:
+      context: Logstash/
+    depends_on:
+      - es01
+      - es02
+      - es03
+    volumes:
+      - ./Logstash/config/:/usr/share/logstash/config/:ro
+      - ./Logstash/pipeline:/usr/share/logstash/pipeline:ro
+    ports:
+      - "35044:5044"
+    environment:
+      LS_JAVA_OPTS: "-Xmx512m -Xms256m"
+    networks:
+      - elk-es-cluster
+
+  kibana:
+    image: dockerelk_kibana
+    build:
+      context: Kibana/
+    volumes:
+      - ./Kibana/config/:/usr/share/kibana/config:ro
+    depends_on:
+      - es01
+      - es02
+      - es03
+    ports:
+      - "35601:5601"
+    networks:
+      - elk-es-cluster
+
+networks:
+  elk-es-cluster:
+    driver: bridge

@@ -1,0 +1,15 @@
+---
+cluster.name: "dockerelk-cluster"
+network.host: 0.0.0.0
+path.data: /usr/share/elasticsearch/data
+path.logs: /var/log/elasticsearch
+
+# Local scalability lab only: Docker Desktop test disks can be above the default
+# high watermark, which prevents shard allocation during cluster smoke tests.
+cluster.routing.allocation.disk.threshold_enabled: false
+
+discovery.zen.ping.unicast.hosts:
+  - es01
+  - es02
+  - es03
+discovery.zen.minimum_master_nodes: 2

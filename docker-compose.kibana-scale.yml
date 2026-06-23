@@ -1,0 +1,63 @@
+name: dockerelk-kibana-scale
+
+services:
+  elasticsearch:
+    image: dockerelk_elastic
+    build:
+      context: Elastic/
+    volumes:
+      - "./.data-kibana-scale:/usr/share/elasticsearch/data"
+      - ./Elastic/config/elasticsearch.yml:/etc/elasticsearch/elasticsearch.yml:ro
+    ports:
+      - "49200:9200"
+      - "49300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx768m -Xms256m"
+    networks:
+      - elk-kibana-scale
+
+  logstash:
+    image: dockerelk_logstash
+    build:
+      context: Logstash/
+    depends_on:
+      - elasticsearch
+    volumes:
+      - ./Logstash/config/:/usr/share/logstash/config/:ro
+      - ./Logstash/pipeline:/usr/share/logstash/pipeline:ro
+    ports:
+      - "45044:5044"
+    environment:
+      LS_JAVA_OPTS: "-Xmx512m -Xms256m"
+    networks:
+      - elk-kibana-scale
+
+  kibana-a:
+    image: dockerelk_kibana
+    build:
+      context: Kibana/
+    volumes:
+      - ./Kibana/config/:/usr/share/kibana/config:ro
+    depends_on:
+      - elasticsearch
+    ports:
+      - "45601:5601"
+    networks:
+      - elk-kibana-scale
+
+  kibana-b:
+    image: dockerelk_kibana
+    build:
+      context: Kibana/
+    volumes:
+      - ./Kibana/config/:/usr/share/kibana/config:ro
+    depends_on:
+      - elasticsearch
+    ports:
+      - "45602:5601"
+    networks:
+      - elk-kibana-scale
+
+networks:
+  elk-kibana-scale:
+    driver: bridge

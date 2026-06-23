@@ -1,1 +1,5 @@
 .data/
+.data-staging/
+.data-logstash-scale/
+.data-es-cluster/
+.data-kibana-scale/

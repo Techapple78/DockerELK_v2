@@ -268,6 +268,106 @@ Les evenements Logstash sont envoyes vers Elasticsearch via le hostname Docker :
 elasticsearch:9200
 ```
 
+## Scalabilite horizontale
+
+Les topologies suivantes sont des environnements de test paralleles. Elles utilisent des ports et des repertoires `.data-*` separes afin de ne pas ecraser la stack principale.
+
+| Fichier Compose | Usage | Ports principaux |
+| --- | --- | --- |
+| `docker-compose.staging.yml` | Validation parallele simple avant prod | ES `19200`, Kibana `15601`, Logstash `15044` |
+| `docker-compose.logstash-scale.yml` | Deux instances Logstash vers un Elasticsearch | ES `29200`, Kibana `25601`, Logstash `25044` et `25045` |
+| `docker-compose.elasticsearch-cluster.yml` | Cluster Elasticsearch 3 noeuds + Logstash + Kibana | ES `39200`, Kibana `35601`, Logstash `35044` |
+| `docker-compose.kibana-scale.yml` | Deux instances Kibana vers le meme Elasticsearch | ES `49200`, Kibana `45601` et `45602`, Logstash `45044` |
+
+Commandes de validation :
+
+```powershell
+docker compose -f docker-compose.staging.yml config
+docker compose -f docker-compose.staging.yml up -d --build
+powershell -ExecutionPolicy Bypass -File tests\Smoke-Test.ps1 `
+  -ElasticsearchUrl http://localhost:19200 `
+  -KibanaUrl http://localhost:15601 `
+  -LogstashPort 15044
+```
+
+Test d'ingestion :
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tests\Send-TestEvent.ps1 `
+  -Port 15044 `
+  -Path /staging-smoke
+
+powershell -ExecutionPolicy Bypass -File tests\Verify-Ingestion.ps1 `
+  -ElasticsearchUrl http://localhost:19200 `
+  -MinimumCount 1
+```
+
+Test Logstash horizontal :
+
+```powershell
+docker compose -f docker-compose.logstash-scale.yml up -d --build
+powershell -ExecutionPolicy Bypass -File tests\Send-TestEvent.ps1 -Port 25044 -Path /logstash-a
+powershell -ExecutionPolicy Bypass -File tests\Send-TestEvent.ps1 -Port 25045 -Path /logstash-b
+powershell -ExecutionPolicy Bypass -File tests\Verify-Ingestion.ps1 `
+  -ElasticsearchUrl http://localhost:29200 `
+  -MinimumCount 2
+```
+
+Test cluster Elasticsearch :
+
+```powershell
+docker compose -f docker-compose.elasticsearch-cluster.yml up -d --build
+powershell -ExecutionPolicy Bypass -File tests\Smoke-Test.ps1 `
+  -ElasticsearchUrl http://localhost:39200 `
+  -KibanaUrl http://localhost:35601 `
+  -LogstashPort 35044
+```
+
+Dans ce scenario, `Elastic/config/elasticsearch-cluster.yml` desactive le seuil disque d'allocation des shards pour les tests locaux Docker Desktop. Ce reglage est utile en labo, mais il ne doit pas etre repris tel quel en production.
+
+Test de tolerance a la perte d'un noeud :
+
+```powershell
+docker compose -f docker-compose.elasticsearch-cluster.yml stop es02
+powershell -ExecutionPolicy Bypass -File tests\Send-TestEvent.ps1 `
+  -Port 35044 `
+  -Path /es-cluster-one-node-down
+powershell -ExecutionPolicy Bypass -File tests\Verify-Ingestion.ps1 `
+  -ElasticsearchUrl http://localhost:39200 `
+  -MinimumCount 1
+docker compose -f docker-compose.elasticsearch-cluster.yml start es02
+```
+
+Test Kibana horizontal :
+
+```powershell
+docker compose -f docker-compose.kibana-scale.yml up -d --build
+powershell -ExecutionPolicy Bypass -File tests\Smoke-Test.ps1 `
+  -ElasticsearchUrl http://localhost:49200 `
+  -KibanaUrl http://localhost:45601 `
+  -LogstashPort 45044
+powershell -ExecutionPolicy Bypass -File tests\Smoke-Test.ps1 `
+  -ElasticsearchUrl http://localhost:49200 `
+  -KibanaUrl http://localhost:45602 `
+  -LogstashPort 45044
+```
+
+Deploiement controle sur la stack principale :
+
+```powershell
+docker compose -f docker-compose.yml up -d --build
+powershell -ExecutionPolicy Bypass -File tests\Smoke-Test.ps1 `
+  -ElasticsearchUrl http://localhost:9200 `
+  -KibanaUrl http://localhost:5601 `
+  -LogstashPort 5044
+powershell -ExecutionPolicy Bypass -File tests\Send-TestEvent.ps1 `
+  -Port 5044 `
+  -Path /prod-post-scale-validation
+powershell -ExecutionPolicy Bypass -File tests\Verify-Ingestion.ps1 `
+  -ElasticsearchUrl http://localhost:9200 `
+  -MinimumCount 1
+```
+
 ## Notes
 
 Cette stack utilise encore une base Ubuntu 16.04 et Elastic Stack 6.x. Ces versions sont anciennes et doivent faire l'objet d'une migration dediee avant un usage de production.
