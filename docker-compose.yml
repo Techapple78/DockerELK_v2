@@ -1,0 +1,57 @@
+version: '2'
+
+services:
+  Elastic:
+    image: dockerelk_elastic
+    build:
+      context: Elastic/
+    volumes:
+      - "./.data:/usr/share/elasticsearch/data"
+      - ./Elastic/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+      - ./Elastic/config/jvm.options:/usr/share/elasticsearch/config/jvm.options:ro
+      - ./Elastic/config/log4j2.properties:/usr/share/elasticsearch/config/log4j2.properties:ro
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx1g -Xms256m"
+    networks:
+      - elk
+
+  Logstash:
+    image: dockerelk_logstash
+    build:
+      context: Logstash/
+    depends_on:
+      - Elastic
+    volumes:
+      - ./Logstash/config/:/usr/share/logstash/config/:ro
+      - ./Logstash/pipeline:/usr/share/logstash/pipeline:ro
+    ports:
+      - "5044:5044"
+      - "10514:10514"
+      - "10514:10514/udp"
+    environment:
+      LS_JAVA_OPTS: "-Xmx1g -Xms256m"
+    networks:
+      - elk
+
+  Kibana:
+    image: dockerelk_kibana
+    build:
+      context: Kibana/
+    volumes:
+      - ./Kibana/config/:/usr/share/kibana/config:ro
+    depends_on:
+      - Elastic
+    links:
+      - Elastic
+    ports:
+      - "5601:5601"
+    networks:
+      - elk
+
+networks:
+
+  elk:
+    driver: bridge
