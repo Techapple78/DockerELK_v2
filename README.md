@@ -368,6 +368,46 @@ powershell -ExecutionPolicy Bypass -File tests\Verify-Ingestion.ps1 `
   -MinimumCount 1
 ```
 
+## Kubernetes sur vSphere
+
+Le socle Terraform pour un cluster K3s de trois VMs avec IP statiques et
+bootstrap Argo CD se trouve dans
+[`infra/k3s-vsphere`](infra/k3s-vsphere/README.md).
+
+Le compte rendu anonymise du deploiement, incluant les incidents et les etats
+attendus, est disponible dans
+[`docs/deploy/2026-06-24_k3s-vsphere-deployment-report.md`](docs/deploy/2026-06-24_k3s-vsphere-deployment-report.md).
+
+Ce mode est actuellement une fondation d'infrastructure. Le deploiement ELK
+Kubernetes est disponible dans `kubernetes/overlays/lab-k3s` avec ECK `3.4.0`
+et Elastic Stack `9.4.2`.
+
+Orchestration complete :
+
+```powershell
+powershell -ExecutionPolicy Bypass -File `
+  infra\k3s-vsphere\scripts\Deploy-ElasticStack.ps1
+```
+
+La procedure cree egalement des donnees infrastructure synthetiques et le
+dashboard `DockerELK Infrastructure Overview`.
+
+Acces Kibana :
+
+```powershell
+powershell -ExecutionPolicy Bypass -File `
+  infra\k3s-vsphere\scripts\Open-Kibana.ps1
+```
+
+Dashboard :
+
+```text
+https://localhost:5601/app/dashboards#/view/dockerelk-infra-overview
+```
+
+Le profil utilise un Elasticsearch mono-noeud et le stockage local K3s. Il est
+destine au laboratoire et ne fournit pas de haute disponibilite des donnees.
+
 ## Notes
 
 Cette stack utilise encore une base Ubuntu 16.04 et Elastic Stack 6.x. Ces versions sont anciennes et doivent faire l'objet d'une migration dediee avant un usage de production.

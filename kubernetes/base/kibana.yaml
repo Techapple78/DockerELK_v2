@@ -1,0 +1,35 @@
+apiVersion: kibana.k8s.elastic.co/v1
+kind: Kibana
+metadata:
+  name: dockerelk
+  namespace: dockerelk
+spec:
+  version: 9.4.2
+  count: 1
+  elasticsearchRef:
+    name: dockerelk
+  http:
+    service:
+      spec:
+        type: NodePort
+        ports:
+          - name: https
+            port: 5601
+            targetPort: 5601
+            nodePort: 30601
+  podTemplate:
+    metadata:
+      labels:
+        app.kubernetes.io/component: kibana
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: k3s-agent-2
+      containers:
+        - name: kibana
+          resources:
+            requests:
+              cpu: 250m
+              memory: 768Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi

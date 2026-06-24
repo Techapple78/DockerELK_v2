@@ -1,0 +1,73 @@
+apiVersion: logstash.k8s.elastic.co/v1alpha1
+kind: Logstash
+metadata:
+  name: dockerelk
+  namespace: dockerelk
+spec:
+  version: 9.4.2
+  count: 1
+  elasticsearchRefs:
+    - name: dockerelk
+      clusterName: dockerelk
+  config:
+    log.level: info
+    api.http.host: 0.0.0.0
+    pipeline.ecs_compatibility: v8
+  pipelines:
+    - pipeline.id: infra-events
+      config.string: |
+        input {
+          tcp {
+            port => 5044
+            codec => json_lines
+          }
+        }
+        filter {
+          mutate {
+            add_field => {
+              "[@metadata][target_index]" => "logstash-dockerelk-infra-%{+YYYY.MM.dd}"
+            }
+          }
+        }
+        output {
+          elasticsearch {
+            hosts => [ "${DOCKERELK_ES_HOSTS}" ]
+            user => "${DOCKERELK_ES_USER}"
+            password => "${DOCKERELK_ES_PASSWORD}"
+            ssl_enabled => true
+            ssl_certificate_authorities => "${DOCKERELK_ES_SSL_CERTIFICATE_AUTHORITY}"
+            index => "%{[@metadata][target_index]}"
+          }
+          stdout {
+            codec => rubydebug
+          }
+        }
+  services:
+    - name: ingest
+      service:
+        spec:
+          type: NodePort
+          ports:
+            - name: tcp-json
+              port: 5044
+              targetPort: 5044
+              nodePort: 30514
+  podTemplate:
+    metadata:
+      labels:
+        app.kubernetes.io/component: logstash
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: k3s-server-1
+      containers:
+        - name: logstash
+          env:
+            - name: LS_JAVA_OPTS
+              value: -Xms384m -Xmx384m
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 768Mi

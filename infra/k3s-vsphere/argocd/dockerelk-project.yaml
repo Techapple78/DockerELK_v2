@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: dockerelk-v2
+  namespace: argocd
+spec:
+  description: Workloads GitOps DockerELK_v2
+  sourceRepos:
+    - https://github.com/Techapple78/DockerELK_v2.git
+  destinations:
+    - namespace: dockerelk
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"

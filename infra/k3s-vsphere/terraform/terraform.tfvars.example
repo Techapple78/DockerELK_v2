@@ -1,0 +1,46 @@
+vsphere_user           = "svc-terraform@vsphere.local"
+vsphere_password       = "CHANGE_ME"
+vsphere_server         = "vcenter.lab.local"
+allow_unverified_ssl   = false
+
+datacenter              = "LAB-DC"
+cluster                 = "LAB-CLUSTER"
+datastore               = "LAB-DATASTORE"
+network                 = "VM Network"
+template_name           = "ubuntu-2204-cloudinit-template"
+vm_folder               = "DockerELK_v2"
+
+domain                  = "lab.local"
+ipv4_gateway            = "192.0.2.1"
+dns_servers             = ["192.0.2.53", "192.0.2.54"]
+
+ssh_public_key          = "ssh-ed25519 AAAA... operator@workstation"
+k3s_token               = "CHANGE_ME_WITH_OPENSSL_RAND_HEX_32"
+k3s_version             = "vX.Y.Z+k3sN"
+
+nodes = {
+  k3s-server-1 = {
+    role         = "server"
+    ipv4_address = "192.0.2.10"
+    ipv4_netmask = 24
+    num_cpus     = 2
+    memory_mb    = 4096
+    disk_size_gb = 30
+  }
+  k3s-agent-1 = {
+    role         = "agent"
+    ipv4_address = "192.0.2.11"
+    ipv4_netmask = 24
+    num_cpus     = 2
+    memory_mb    = 4096
+    disk_size_gb = 30
+  }
+  k3s-agent-2 = {
+    role         = "agent"
+    ipv4_address = "192.0.2.12"
+    ipv4_netmask = 24
+    num_cpus     = 2
+    memory_mb    = 4096
+    disk_size_gb = 30
+  }
+}

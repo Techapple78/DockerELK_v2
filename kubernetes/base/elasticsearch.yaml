@@ -1,0 +1,42 @@
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: dockerelk
+  namespace: dockerelk
+spec:
+  version: 9.4.2
+  nodeSets:
+    - name: default
+      count: 1
+      config:
+        node.store.allow_mmap: false
+        xpack.ml.enabled: false
+      podTemplate:
+        metadata:
+          labels:
+            app.kubernetes.io/component: elasticsearch
+        spec:
+          nodeSelector:
+            kubernetes.io/hostname: k3s-agent-1
+          containers:
+            - name: elasticsearch
+              env:
+                - name: ES_JAVA_OPTS
+                  value: -Xms1g -Xmx1g
+              resources:
+                requests:
+                  cpu: 500m
+                  memory: 2Gi
+                limits:
+                  cpu: "2"
+                  memory: 2500Mi
+      volumeClaimTemplates:
+        - metadata:
+            name: elasticsearch-data
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 15Gi
+            storageClassName: local-path

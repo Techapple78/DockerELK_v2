@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dockerelk-v2
+  namespace: argocd
+spec:
+  project: dockerelk-v2
+  source:
+    repoURL: https://github.com/Techapple78/DockerELK_v2.git
+    targetRevision: v2.0.0
+    path: kubernetes/overlays/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dockerelk
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

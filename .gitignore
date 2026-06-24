@@ -3,3 +3,11 @@
 .data-logstash-scale/
 .data-es-cluster/
 .data-kibana-scale/
+*.tfvars
+*.tfstate
+*.tfstate.*
+*.tfplan
+.terraform/
+crash.log
+*.pem
+kubeconfig
