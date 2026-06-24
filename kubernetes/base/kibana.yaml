@@ -8,8 +8,14 @@ spec:
   count: 1
   elasticsearchRef:
     name: dockerelk
+  enterpriseSearchRef: {}
+  packageRegistryRef: {}
+  monitoring:
+    logs: {}
+    metrics: {}
   http:
     service:
+      metadata: {}
       spec:
         type: NodePort
         ports:
@@ -17,6 +23,9 @@ spec:
             port: 5601
             targetPort: 5601
             nodePort: 30601
+            protocol: TCP
+    tls:
+      certificate: {}
   podTemplate:
     metadata:
       labels:

@@ -9,6 +9,10 @@ spec:
   elasticsearchRefs:
     - name: dockerelk
       clusterName: dockerelk
+  monitoring:
+    logs: {}
+    metrics: {}
+  updateStrategy: {}
   config:
     log.level: info
     api.http.host: 0.0.0.0
@@ -52,6 +56,7 @@ spec:
               port: 5044
               targetPort: 5044
               nodePort: 30514
+              protocol: TCP
   podTemplate:
     metadata:
       labels:
